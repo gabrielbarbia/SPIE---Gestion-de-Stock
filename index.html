@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SPIE — Gestion de Stock</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app" id="app">
+
+  <!-- ════════ LOGIN ════════ -->
+  <div class="login-wrap" id="loginWrap">
+    <div class="login-card">
+      <div class="login-logo">SPIE</div>
+      <div class="login-sub">Gestion de stock — Connexion</div>
+      <div class="form-group">
+        <label>Identifiant</label>
+        <input type="text" id="loginUser" placeholder="Votre identifiant">
+      </div>
+      <div class="form-group">
+        <label>Mot de passe</label>
+        <input type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <button class="btn-primary" onclick="doLogin()">Se connecter</button>
+      <div class="login-error" id="loginErr">Identifiants incorrects, veuillez réessayer.</div>
+    </div>
+  </div>
+
+  <!-- ════════ APPLICATION PRINCIPALE ════════ -->
+  <div id="mainApp" style="display:none;flex-direction:column;min-height:100vh">
+
+    <!-- Header -->
+    <div class="header">
+      
+      <div class="logo">SPIE <span>Gestion de Stock</span></div>
+      <div class="user-badge">
+        <span id="headerUser">—</span>
+        <span class="role-pill" id="headerRole">—</span>
+        <button class="btn-logout" onclick="doLogout()">Déconnexion</button>
+      </div>
+    </div>
+
+    <!-- Espace entre header et nav -->
+    <div class="header-spacer"></div>
+
+    <!-- Navigation (générée dynamiquement par script.js) -->
+    <div class="nav" id="mainNav"></div>
+
+    <div class="nav-spacer"></div>
+
+    <!-- Pages -->
+    <div class="content">
+      <div id="page-dashboard"></div>
+      <div id="page-stock"      style="display:none"></div>
+      <div id="page-produits"   style="display:none"></div>
+      <div id="page-comptes"    style="display:none"></div>
+      <div id="page-historique" style="display:none"></div>
+      <div id="page-config"     style="display:none"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Modal partagée -->
+<div id="modalWrap" class="modal-bg-wrap">
+  <div class="modal" id="modalBox"></div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

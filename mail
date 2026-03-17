@@ -1,0 +1,71 @@
+══════════════════════════════════════════════════════
+  SPIE — Template EmailJS pour les alertes de stock
+══════════════════════════════════════════════════════
+
+Ce fichier contient le template à configurer sur emailjs.com
+pour recevoir les alertes de stock par email.
+
+──────────────────────────────────────────────────────
+ÉTAPES DE CONFIGURATION
+──────────────────────────────────────────────────────
+
+1. Créez un compte gratuit sur https://www.emailjs.com
+2. Allez dans "Email Services" → connectez votre boîte mail (Gmail, Outlook…)
+   → notez le Service ID  (ex: service_abc123)
+3. Allez dans "Email Templates" → créez un nouveau template
+   → collez le contenu ci-dessous dans le corps du template
+   → notez le Template ID  (ex: template_xyz789)
+4. Dans "Account" → notez votre Public Key  (ex: ABCDEFGHIJKLMNOP)
+5. Dans l'application SPIE, onglet "Configuration" :
+   → renseignez le Service ID, Template ID, Clé publique et l'email destinataire
+   → cliquez "Enregistrer" puis "Tester l'envoi" pour vérifier
+
+──────────────────────────────────────────────────────
+OBJET DU MAIL (Subject)
+──────────────────────────────────────────────────────
+
+[SPIE Stock] Alerte {{status}} — {{product_name}}
+
+──────────────────────────────────────────────────────
+CORPS DU MAIL (Body) — copiez ce bloc dans EmailJS
+──────────────────────────────────────────────────────
+
+Bonjour,
+
+Une alerte de stock a été déclenchée sur l'application SPIE Gestion de Stock.
+
+─────────────────────────────
+  Produit   : {{product_name}}
+  Statut    : {{status}}
+  Quantité  : {{quantity}} {{unit}}
+─────────────────────────────
+  Seuil alerte   : {{seuil_alerte}} {{unit}}
+  Seuil critique : {{seuil_critique}} {{unit}}
+─────────────────────────────
+
+Veuillez vérifier et réapprovisionner ce produit dès que possible.
+
+Cordialement,
+L'application SPIE Gestion de Stock
+
+──────────────────────────────────────────────────────
+VARIABLES DISPONIBLES (injectées automatiquement)
+──────────────────────────────────────────────────────
+
+  {{product_name}}   → Nom du produit
+  {{quantity}}       → Quantité actuelle
+  {{status}}         → Statut : "alerte" ou "critique"
+  {{seuil_alerte}}   → Valeur du seuil alerte
+  {{seuil_critique}} → Valeur du seuil critique
+  {{unit}}           → Unité (pcs, m, kg…)
+  {{to_email}}       → Email destinataire (configuré dans l'appli)
+
+──────────────────────────────────────────────────────
+NOTES
+──────────────────────────────────────────────────────
+
+- Le plan gratuit EmailJS permet 200 emails/mois.
+- Un email est envoyé automatiquement à chaque fois
+  qu'une quantité passe en dessous d'un seuil (alerte ou critique).
+- Pour changer l'email destinataire, modifiez-le dans
+  l'onglet "Configuration" de l'application sans toucher au code.

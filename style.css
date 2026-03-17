@@ -1,0 +1,451 @@
+/* ══════════════════════════════════════════════
+   SPIE — Gestion de Stock
+   style.css
+   ══════════════════════════════════════════════ */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  background: #f5f5f5;
+  color: #1a1a1a;
+}
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Header ── */
+.header {
+  background: #e2001a;
+  color: #fff;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.logo {
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  color: #fff;
+}
+.logo span {
+  font-weight: 400;
+  font-size: 14px;
+  opacity: .85;
+  margin-left: 8px;
+}
+.user-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #fff;
+}
+.role-pill {
+  background: rgba(255,255,255,.2);
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+}
+.btn-logout {
+  background: rgba(255,255,255,.15);
+  border: 1px solid rgba(255,255,255,.3);
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.btn-logout:hover { background: rgba(255,255,255,.25); }
+
+/* ── Espace header / nav ── */
+.header-spacer {
+  height: 10px;
+  background: #f5f5f5;
+}
+.nav {
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  margin: 0 16px;
+  padding: 0 8px;
+  display: flex;
+  gap: 0;
+}
+.nav-spacer { height: 14px; }
+
+/* ── Navigation ── */
+.nav-btn {
+  padding: 10px 16px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: #666;
+  border-bottom: 2px solid transparent;
+  transition: .15s;
+}
+.nav-btn:hover { color: #1a1a1a; }
+.nav-btn.active {
+  color: #e2001a;
+  border-bottom-color: #e2001a;
+  font-weight: 500;
+}
+
+/* ── Layout ── */
+.content {
+  flex: 1;
+  padding: 20px 24px;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* ── Login ── */
+.login-wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f5f5;
+}
+.login-card {
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  padding: 40px 36px;
+  width: 360px;
+  box-shadow: 0 2px 12px rgba(0,0,0,.06);
+}
+.login-logo {
+  color: #e2001a;
+  font-size: 28px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+.login-sub {
+  color: #888;
+  font-size: 13px;
+  margin-bottom: 28px;
+}
+.login-error {
+  color: #e2001a;
+  font-size: 13px;
+  margin-top: 10px;
+  display: none;
+}
+.login-demo {
+  margin-top: 16px;
+  font-size: 12px;
+  color: #999;
+  line-height: 1.8;
+  background: #fafafa;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+/* ── Formulaires ── */
+.form-group { margin-bottom: 16px; }
+.form-group label {
+  display: block;
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 6px;
+}
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fff;
+  color: #1a1a1a;
+  font-size: 14px;
+}
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #e2001a;
+}
+.form-row  { display: grid; grid-template-columns: 1fr 1fr;       gap: 12px; }
+.form-row3 { display: grid; grid-template-columns: 1fr 1fr 1fr;   gap: 12px; }
+.form-inline {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+.form-inline .form-group {
+  flex: 1;
+  min-width: 140px;
+  margin-bottom: 0;
+}
+
+/* ── Boutons ── */
+.btn-primary {
+  width: 100%;
+  background: #e2001a;
+  color: #fff;
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: 500;
+  margin-top: 4px;
+}
+.btn-primary:hover { background: #c8001a; }
+
+.btn-add {
+  background: #e2001a;
+  color: #fff;
+  border: none;
+  padding: 9px 18px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.btn-add:hover { background: #c8001a; }
+
+.btn-sm {
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  border: 1px solid #ddd;
+  background: #fff;
+  color: #1a1a1a;
+}
+.btn-sm:hover { background: #f5f5f5; }
+
+.btn-danger { border-color: #f7c1c1; color: #a32d2d; }
+.btn-danger:hover { background: #fcebeb; }
+
+/* ── Cards ── */
+.card {
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 20px;
+}
+.card-title {
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 16px;
+  color: #1a1a1a;
+}
+
+/* ── Compteurs (stats) ── */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.stat {
+  background: #f5f5f5;
+  border-radius: 8px;
+  padding: 14px 16px;
+  text-align: center;
+}
+.stat-val { font-size: 28px; font-weight: 500; }
+.stat-lbl { font-size: 12px; color: #888; margin-top: 2px; }
+
+/* ── Tableau ── */
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th {
+  text-align: left;
+  padding: 10px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #888;
+  border-bottom: 1px solid #e5e5e5;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f0f0f0;
+  vertical-align: middle;
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #fafafa; }
+
+/* ── Badges statuts ── */
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.badge-ok       { background: #eaf3de; color: #27500a; }
+.badge-alerte   { background: #faeeda; color: #633806; }
+.badge-critique { background: #fcebeb; color: #a32d2d; }
+.badge-admin    { background: #e6f1fb; color: #185fa5; }
+.badge-op       { background: #eaf3de; color: #27500a; }
+
+/* ── Bannières d'alerte ── */
+.alert-banner {
+  border-radius: 8px;
+  padding: 10px 16px;
+  margin-bottom: 10px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.banner-critique { background: #fcebeb; border: 1px solid #f7c1c1; color: #a32d2d; }
+.banner-alerte   { background: #faeeda; border: 1px solid #fac775; color: #633806; }
+.alert-dot       { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.dot-critique    { background: #e2001a; }
+.dot-alerte      { background: #ef9f27; }
+
+/* ── Légende seuils ── */
+.seuil-legend {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.seuil-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #888;
+}
+.seuil-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+/* ── Stock — barre de recherche & colonne quantité large ── */
+.table-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.search-bar {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  width: 240px;
+  background: #fff;
+  color: #1a1a1a;
+}
+.search-bar:focus { outline: none; border-color: #e2001a; }
+
+.col-qty { min-width: 200px; width: 200px; }
+
+.qty-wrap { display: flex; align-items: center; gap: 8px; }
+.qty-btn {
+  width: 30px;
+  height: 30px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #f5f5f5;
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1a1a1a;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.qty-btn:hover { background: #e5e5e5; }
+.input-qty {
+  width: 90px;
+  padding: 7px 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 500;
+  background: #fff;
+  color: #1a1a1a;
+}
+.input-qty:focus { outline: none; border-color: #e2001a; }
+
+/* ── Messages création de compte ── */
+.msg-ok {
+  color: #27500a;
+  font-size: 13px;
+  margin-top: 10px;
+  display: none;
+  background: #eaf3de;
+  padding: 8px 12px;
+  border-radius: 6px;
+}
+.msg-err {
+  color: #a32d2d;
+  font-size: 13px;
+  margin-top: 10px;
+  display: none;
+  background: #fcebeb;
+  padding: 8px 12px;
+  border-radius: 6px;
+}
+
+/* ── Modal ── */
+.modal-bg-wrap {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,.45);
+  z-index: 100;
+}
+.modal {
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  padding: 28px;
+  width: 440px;
+  max-width: 95%;
+  box-shadow: 0 8px 32px rgba(0,0,0,.12);
+}
+.modal-title {
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 20px;
+}
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+/* ── Note EmailJS ── */
+.emailjs-note {
+  background: #e6f1fb;
+  border: 1px solid #b5d4f4;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 13px;
+  color: #185fa5;
+  margin-bottom: 16px;
+  line-height: 1.6;
+}
+.emailjs-note code {
+  background: rgba(0,0,0,.06);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-family: monospace;
+}
