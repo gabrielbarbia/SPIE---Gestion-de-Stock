@@ -4,6 +4,37 @@
    ══════════════════════════════════════════════ */
 
 /* ──────────────────────────────────────────────
+   CONFIGURATION EMAILJS
+   ────────────────────────────────────────────── */
+const EJS_SERVICE_ID  = 'service_ojql1jj';
+const EJS_TEMPLATE_ID = 'template_72ak8fq';
+const EJS_PUBLIC_KEY  = 'rYU5VCXEr21mtgFsr';
+const EJS_RECIPIENT   = 'gabrielbarbia@gmail.com';
+
+function sendMail(type_alerte, product_name, quantity, unit, status, auteur, details) {
+  fetch('https://api.emailjs.com/api/v1.0/email/send', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      service_id:  EJS_SERVICE_ID,
+      template_id: EJS_TEMPLATE_ID,
+      user_id:     EJS_PUBLIC_KEY,
+      template_params: {
+        email:        EJS_RECIPIENT,
+        type_alerte,
+        product_name,
+        quantity:     quantity || '—',
+        unit:         unit     || '—',
+        status:       status   || '—',
+        auteur:       auteur   || '—',
+        details:      details  || ''
+      }
+    })
+  }).catch(e => console.warn('EmailJS error:', e));
+}
+
+
+/* ──────────────────────────────────────────────
    CONFIGURATION SUPABASE
    ────────────────────────────────────────────── */
 const SUPABASE_URL = 'https://gpgurjhqagsvozyhuhey.supabase.co';
@@ -303,7 +334,7 @@ async function setQty(id, val) {
 function refreshStatusUI(p) {
   const el = document.getElementById('st-' + p.id);
   if (el) el.innerHTML = statusBadge(getStatus(p));
-  if (getStatus(p) !== 'ok' && ejsCfg.serviceId) sendAlertEmail(p);
+  if (getStatus(p) !== 'ok') sendAlertEmail(p);
 }
 
 async function delProductFromStock(id) {
@@ -312,6 +343,7 @@ async function delProductFromStock(id) {
   confirmModal(`Supprimer <strong>${p.name}</strong> du stock ?`, 'Cette action est irréversible.', async () => {
     try {
       await logAction(p.name, `Produit supprimé (depuis l'onglet Stock)`);
+      sendMail('🗑️ Suppression produit', p.name, p.qty, p.unit, getStatus(p), currentUser ? currentUser.name : '—', `Le produit a été supprimé depuis l'onglet Stock.`);
       await db.delete('produits', id);
       products = products.filter(x => x.id !== id);
       renderStock();
@@ -393,6 +425,7 @@ async function delProduct(id) {
   confirmModal(`Supprimer <strong>${p.name}</strong> ?`, 'Cette action est irréversible.', async () => {
     try {
       await logAction(p.name, `Produit supprimé`);
+      sendMail('🗑️ Suppression produit', p.name, p.qty, p.unit, getStatus(p), currentUser ? currentUser.name : '—', `Le produit a été supprimé du stock.`);
       await db.delete('produits', id);
       renderProduits();
     } catch(e) { infoModal('Erreur lors de la suppression.'); }
@@ -521,6 +554,7 @@ async function createAccount() {
   try {
     await db.insert('utilisateurs', { username: u, password: p, name: n, role: r });
     await logAction('—', `Compte créé : "${u}" (${n}) — Rôle : ${r}`);
+    sendMail('👤 Nouveau compte', `Compte : ${u}`, '—', '—', '—', currentUser ? currentUser.name : '—', `Nom : ${n} | Rôle : ${r}`);
     ok.style.display = 'block';
     setTimeout(() => ok.style.display = 'none', 3000);
     document.getElementById('nc-user').value = '';
@@ -684,23 +718,17 @@ function renderConfig() {
   if (!isAdmin()) return;
   document.getElementById('page-config').innerHTML = `
     <div class="card">
+      <div class="card-title">Configuration des alertes email</div>
       <div class="emailjs-note">
-        Créez un compte sur <strong>emailjs.com</strong>, configurez un service + template, puis renseignez ci-dessous.<br><br>
-        Variables : <code>product_name</code> <code>quantity</code> <code>status</code>
-        <code>seuil_alerte</code> <code>seuil_critique</code> <code>unit</code> <code>to_email</code>
+        Les alertes email sont configurées et actives. Un mail est envoyé automatiquement à
+        <strong>${EJS_RECIPIENT}</strong> dans les cas suivants :<br><br>
+        🟡 Produit en <strong>ALERTE</strong> &nbsp;|&nbsp;
+        🔴 Produit en <strong>CRITIQUE</strong> &nbsp;|&nbsp;
+        🗑️ <strong>Suppression</strong> d'un produit &nbsp;|&nbsp;
+        👤 <strong>Création</strong> d'un compte
       </div>
-      <div class="card-title">Configuration EmailJS</div>
-      <div class="form-row">
-        <div class="form-group"><label>Service ID</label><input type="text" id="ejs-svc" value="${ejsCfg.serviceId}" placeholder="service_xxxxxxx"></div>
-        <div class="form-group"><label>Template ID</label><input type="text" id="ejs-tpl" value="${ejsCfg.templateId}" placeholder="template_xxxxxxx"></div>
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label>Clé publique</label><input type="text" id="ejs-key" value="${ejsCfg.publicKey}" placeholder="xxxxxxxxxxxxxxxx"></div>
-        <div class="form-group"><label>Email destinataire</label><input type="email" id="ejs-mail" value="${ejsCfg.recipientEmail}" placeholder="stock@spie.com"></div>
-      </div>
-      <div style="display:flex;gap:8px;margin-top:12px">
-        <button class="btn-add" onclick="saveCfg()">Enregistrer</button>
-        <button class="btn-sm" onclick="testMail()">Tester l'envoi</button>
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button class="btn-add" onclick="testMailConfig()">Envoyer un mail de test</button>
       </div>
       <div id="cfg-msg" style="margin-top:10px;font-size:13px;display:none"></div>
     </div>`;
@@ -718,30 +746,26 @@ function saveCfg() {
   setTimeout(() => m.style.display = 'none', 3000);
 }
 
-function testMail() {
-  if (!ejsCfg.serviceId) {
-    const m = document.getElementById('cfg-msg');
-    m.style.display = 'block'; m.style.color = '#a32d2d';
-    m.textContent = 'Configurez d\'abord EmailJS.';
-    return;
-  }
-  sendAlertEmail({ name: 'Produit Test', qty: 2, seuil_alerte: 10, seuil_critique: 5, unit: 'pcs' });
+function testMailConfig() {
+  sendMail('🧪 Test', 'Produit Test', 5, 'pcs', 'alerte', currentUser ? currentUser.name : 'Admin', 'Ceci est un mail de test envoyé depuis la configuration.');
   const m = document.getElementById('cfg-msg');
   m.style.display = 'block'; m.style.color = '#27500a';
-  m.textContent = 'Email de test envoyé à ' + ejsCfg.recipientEmail;
+  m.textContent = 'Mail de test envoyé à ' + EJS_RECIPIENT;
   setTimeout(() => m.style.display = 'none', 4000);
 }
 
-function sendAlertEmail(p) {
-  if (!ejsCfg.serviceId || !ejsCfg.templateId || !ejsCfg.publicKey) return;
-  fetch('https://api.emailjs.com/api/v1.0/email/send', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      service_id: ejsCfg.serviceId, template_id: ejsCfg.templateId, user_id: ejsCfg.publicKey,
-      template_params: { product_name: p.name, quantity: p.qty, status: getStatus(p), seuil_alerte: p.seuil_alerte, seuil_critique: p.seuil_critique, unit: p.unit, to_email: ejsCfg.recipientEmail }
-    })
-  }).catch(() => {});
+function sendAlertEmail(p, statutForce) {
+  const s = statutForce || getStatus(p);
+  const label = s === 'critique' ? '🔴 CRITIQUE' : '🟡 ALERTE';
+  sendMail(
+    label,
+    p.name,
+    p.qty,
+    p.unit,
+    s,
+    currentUser ? currentUser.name : '—',
+    `Seuil alerte : ${p.seuil_alerte} ${p.unit} | Seuil critique : ${p.seuil_critique} ${p.unit}`
+  );
 }
 
 /* ──────────────────────────────────────────────
