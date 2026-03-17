@@ -11,6 +11,54 @@ const EJS_TEMPLATE_ID = 'template_72ak8fq';
 const EJS_PUBLIC_KEY  = 'rYU5VCXEr21mtgFsr';
 const EJS_RECIPIENT   = 'gabrielbarbia@gmail.com';
 
+/* ──────────────────────────────────────────────
+   SESSION — Maintien de connexion 10 minutes
+   ────────────────────────────────────────────── */
+const SESSION_DURATION = 10 * 60 * 1000; // 10 minutes en ms
+
+function saveSession(user) {
+  const session = { user, expiry: Date.now() + SESSION_DURATION };
+  sessionStorage.setItem('spie_session', JSON.stringify(session));
+}
+
+function loadSession() {
+  try {
+    const raw = sessionStorage.getItem('spie_session');
+    if (!raw) return null;
+    const session = JSON.parse(raw);
+    if (Date.now() > session.expiry) {
+      sessionStorage.removeItem('spie_session');
+      return null;
+    }
+    // Renouveler la session à chaque chargement si encore valide
+    session.expiry = Date.now() + SESSION_DURATION;
+    sessionStorage.setItem('spie_session', JSON.stringify(session));
+    return session.user;
+  } catch(e) { return null; }
+}
+
+function clearSession() {
+  sessionStorage.removeItem('spie_session');
+}
+
+/* ──────────────────────────────────────────────
+   AUTO-REFRESH — Toutes les 2 minutes
+   ────────────────────────────────────────────── */
+const REFRESH_INTERVAL = 2 * 60 * 1000; // 2 minutes en ms
+let refreshTimer = null;
+
+function startAutoRefresh() {
+  if (refreshTimer) clearInterval(refreshTimer);
+  refreshTimer = setInterval(() => {
+    if (currentUser) showTab(currentTab);
+  }, REFRESH_INTERVAL);
+}
+
+function stopAutoRefresh() {
+  if (refreshTimer) { clearInterval(refreshTimer); refreshTimer = null; }
+}
+
+
 async function getRecipients() {
   try {
     const rows = await db.select('destinataires', 'order=email.asc');
@@ -155,12 +203,9 @@ async function doLogin() {
     const rows = await db.select('utilisateurs', `username=eq.${encodeURIComponent(u)}&password=eq.${encodeURIComponent(p)}`);
     if (rows && rows.length > 0) {
       currentUser = { ...rows[0], username: rows[0].username };
-      document.getElementById('loginWrap').style.display  = 'none';
-      document.getElementById('mainApp').style.display    = 'flex';
-      document.getElementById('headerUser').textContent   = currentUser.name;
-      document.getElementById('headerRole').textContent   = isAdmin() ? 'Admin' : 'Opérateur';
-      buildNav();
-      showTab('dashboard');
+      saveSession(currentUser);
+      startSession(currentUser);
+      startAutoRefresh();
     } else {
       document.getElementById('loginErr').style.display = 'block';
     }
@@ -175,12 +220,23 @@ async function doLogin() {
 function doLogout() {
   currentUser = null;
   products    = [];
+  clearSession();
+  stopAutoRefresh();
   document.getElementById('mainApp').style.display   = 'none';
   document.getElementById('loginWrap').style.display = 'flex';
   document.getElementById('loginErr').style.display  = 'none';
   document.getElementById('loginErr').textContent    = 'Identifiants incorrects, veuillez réessayer.';
   document.getElementById('loginPass').value         = '';
   document.getElementById('mainNav').innerHTML       = '';
+}
+
+function startSession(user) {
+  document.getElementById('loginWrap').style.display  = 'none';
+  document.getElementById('mainApp').style.display    = 'flex';
+  document.getElementById('headerUser').textContent   = user.name;
+  document.getElementById('headerRole').textContent   = user.role === 'admin' ? 'Admin' : 'Opérateur';
+  buildNav();
+  showTab('dashboard');
 }
 
 /* ──────────────────────────────────────────────
@@ -856,3 +912,15 @@ function infoModal(msg) {
     <div class="modal-actions"><button class="btn-add" onclick="closeModal()">OK</button></div>`;
   document.getElementById('modalWrap').style.display = 'flex';
 }
+
+/* ──────────────────────────────────────────────
+   RESTAURATION DE SESSION AU CHARGEMENT
+   ────────────────────────────────────────────── */
+(function initApp() {
+  const savedUser = loadSession();
+  if (savedUser) {
+    currentUser = savedUser;
+    startSession(savedUser);
+    startAutoRefresh();
+  }
+})();
