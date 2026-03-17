@@ -129,8 +129,9 @@ const db = {
    ONGLETS AUTORISÉS PAR RÔLE
    ────────────────────────────────────────────── */
 const TABS_BY_ROLE = {
-  admin:     ['dashboard', 'stock', 'produits', 'comptes', 'historique', 'config'],
-  operateur: ['dashboard', 'stock', 'historique']
+  admin:       ['dashboard', 'stock', 'produits', 'comptes', 'historique', 'config'],
+  operateur:   ['dashboard', 'stock', 'historique'],
+  observateur: ['dashboard', 'stock', 'historique']
 };
 
 const TAB_LABELS = {
@@ -141,6 +142,10 @@ const TAB_LABELS = {
   historique: 'Historique',
   config:     'Configuration'
 };
+
+/* Rôles en lecture seule — aucune modification permise */
+const READONLY_ROLES = ['observateur'];
+function isReadOnly() { return currentUser && READONLY_ROLES.includes(currentUser.role); }
 
 /* ──────────────────────────────────────────────
    ÉTAT GLOBAL
@@ -336,21 +341,24 @@ async function renderStock() {
         <input class="search-bar" type="text" placeholder="Rechercher un produit..." oninput="filterStock(this.value)">
       </div>
       <table id="stockTable"><thead><tr>
-        <th>Produit</th><th>Catégorie</th><th class="col-qty">Quantité (éditable)</th>
+        <th>Produit</th><th>Catégorie</th><th class="col-qty">${isReadOnly() ? 'Quantité' : 'Quantité (éditable)'}</th>
         <th>Seuil alerte</th><th>Seuil critique</th><th>Statut</th>
         ${isAdmin() ? '<th>Action</th>' : ''}
       </tr></thead><tbody>`;
 
   products.forEach(p => {
+    const qtyCell = isReadOnly()
+      ? `<strong>${p.qty}</strong> ${p.unit}`
+      : `<div class="qty-wrap">
+          <button class="qty-btn" onclick="changeQty(${p.id}, -1)">−</button>
+          <input class="input-qty" type="number" min="0" value="${p.qty}" id="qinp-${p.id}"
+            onchange="setQty(${p.id}, this.value)" onblur="setQty(${p.id}, this.value)">
+          <button class="qty-btn" onclick="changeQty(${p.id}, 1)">+</button>
+        </div>`;
     html += `<tr data-name="${p.name.toLowerCase()}" data-cat="${p.category.toLowerCase()}">
       <td><strong>${p.name}</strong><div style="font-size:12px;color:#888">${p.unit}</div></td>
       <td style="color:#888">${p.category}</td>
-      <td class="col-qty"><div class="qty-wrap">
-        <button class="qty-btn" onclick="changeQty(${p.id}, -1)">−</button>
-        <input class="input-qty" type="number" min="0" value="${p.qty}" id="qinp-${p.id}"
-          onchange="setQty(${p.id}, this.value)" onblur="setQty(${p.id}, this.value)">
-        <button class="qty-btn" onclick="changeQty(${p.id}, 1)">+</button>
-      </div></td>
+      <td class="col-qty">${qtyCell}</td>
       <td>${p.seuil_alerte} ${p.unit}</td>
       <td>${p.seuil_critique} ${p.unit}</td>
       <td id="st-${p.id}">${statusBadge(getStatus(p))}</td>
@@ -368,6 +376,7 @@ function filterStock(val) {
 }
 
 async function changeQty(id, delta) {
+  if (isReadOnly()) return;
   const p = products.find(x => x.id === id); if (!p) return;
   const oldQty = p.qty;
   const newQty = Math.max(0, p.qty + delta);
@@ -383,6 +392,7 @@ async function changeQty(id, delta) {
 }
 
 async function setQty(id, val) {
+  if (isReadOnly()) return;
   const p = products.find(x => x.id === id); if (!p) return;
   const oldQty = p.qty;
   const newQty = Math.max(0, parseInt(val) || 0);
@@ -568,7 +578,8 @@ async function renderComptes() {
         <div class="form-group"><label>Mot de passe</label><input type="password" id="nc-pass" placeholder="••••••••"></div>
         <div class="form-group"><label>Rôle</label>
           <select id="nc-role">
-            <option value="operateur">Opérateur — Stock uniquement</option>
+            <option value="observateur">Observateur — Lecture seule</option>
+            <option value="operateur">Opérateur — Modification des quantités</option>
             <option value="admin">Administrateur — Accès complet</option>
           </select>
         </div>
@@ -586,8 +597,10 @@ async function renderComptes() {
   usersList.forEach(u => {
     const isSelf    = u.username === currentUser.username;
     const roleBadge = u.role === 'admin'
-      ? '<span class="badge badge-admin">Admin</span>'
-      : '<span class="badge badge-op">Opérateur</span>';
+      ? '<span class="badge" style="background:#fcebeb;color:#a32d2d">Administrateur</span>'
+      : u.role === 'observateur'
+      ? '<span class="badge badge-ok">Observateur</span>'
+      : '<span class="badge badge-admin">Opérateur</span>';
     const tabs  = (TABS_BY_ROLE[u.role] || []).map(t => TAB_LABELS[t]).join(', ');
     const delBtn = isSelf
       ? `<span style="font-size:12px;color:#888">Compte actif</span>`
@@ -657,8 +670,9 @@ async function openEditAccount(id, username) {
     </div>
     <div class="form-group"><label>Rôle</label>
       <select id="ea-role" ${isSelf ? 'disabled' : ''}>
-        <option value="operateur" ${u.role === 'operateur' ? 'selected' : ''}>Opérateur — Stock uniquement</option>
-        <option value="admin"     ${u.role === 'admin'     ? 'selected' : ''}>Administrateur — Accès complet</option>
+        <option value="observateur" ${u.role === 'observateur' ? 'selected' : ''}>Observateur — Lecture seule</option>
+        <option value="operateur"   ${u.role === 'operateur'   ? 'selected' : ''}>Opérateur — Modification des quantités</option>
+        <option value="admin"       ${u.role === 'admin'       ? 'selected' : ''}>Administrateur — Accès complet</option>
       </select>
       ${isSelf ? '<p style="font-size:12px;color:#999;margin-top:4px">Impossible de modifier son propre rôle.</p>' : ''}
     </div>
