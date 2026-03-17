@@ -239,7 +239,8 @@ function startSession(user) {
   document.getElementById('loginWrap').style.display  = 'none';
   document.getElementById('mainApp').style.display    = 'flex';
   document.getElementById('headerUser').textContent   = user.name;
-  document.getElementById('headerRole').textContent   = user.role === 'admin' ? 'Admin' : 'Opérateur';
+  const _roleLabels = { admin: 'Administrateur', operateur: 'Opérateur', observateur: 'Observateur' };
+  document.getElementById('headerRole').textContent = _roleLabels[user.role] || user.role;
   buildNav();
   showTab('dashboard');
 }
@@ -871,7 +872,6 @@ function sendAlertEmail(p, statutForce) {
     `Produit : ${p.name}      |     Quantité  : ${p.qty}    |     Seuil critique : ${p.seuil_critique}`
   );
 }
-
 /* ──────────────────────────────────────────────
    DESTINATAIRES EMAIL
    ────────────────────────────────────────────── */
