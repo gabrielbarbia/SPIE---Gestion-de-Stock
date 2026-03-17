@@ -468,4 +468,6 @@ tr:hover td { background: #fafafa; }
   font-size: 12px;
   flex-shrink: 0;
 }
-.footer span:first-child { color: #e2001a; font-weight: 500; }
+.footerred:{ 
+  color: #e2001a; font-weight: 500; 
+}
