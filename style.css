@@ -464,7 +464,7 @@ tr:hover td { background: #fafafa; }
   padding: 12px 24px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: space-around;
   font-size: 12px;
   flex-shrink: 0;
 }
