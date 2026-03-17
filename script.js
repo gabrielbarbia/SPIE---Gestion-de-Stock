@@ -129,7 +129,7 @@ const db = {
    ONGLETS AUTORISÉS PAR RÔLE
    ────────────────────────────────────────────── */
 const TABS_BY_ROLE = {
-  admin:       ['dashboard', 'stock', 'produits', 'comptes', 'historique', 'config'],
+  admin:       ['dashboard', 'stock', 'produits', 'historique', 'comptes',  'config'],
   operateur:   ['dashboard', 'stock', 'historique'],
   observateur: ['dashboard', 'stock', 'historique']
 };
@@ -138,8 +138,8 @@ const TAB_LABELS = {
   dashboard:  'Tableau de bord',
   stock:      'Stock',
   produits:   'Produits',
-  comptes:    'Comptes',
   historique: 'Historique',
+  comptes:    'Comptes',
   config:     'Configuration'
 };
 
