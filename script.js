@@ -11,26 +11,36 @@ const EJS_TEMPLATE_ID = 'template_72ak8fq';
 const EJS_PUBLIC_KEY  = 'rYU5VCXEr21mtgFsr';
 const EJS_RECIPIENT   = 'gabrielbarbia@gmail.com';
 
-function sendMail(type_alerte, product_name, quantity, unit, status, auteur, details) {
-  fetch('https://api.emailjs.com/api/v1.0/email/send', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      service_id:  EJS_SERVICE_ID,
-      template_id: EJS_TEMPLATE_ID,
-      user_id:     EJS_PUBLIC_KEY,
-      template_params: {
-        email:        EJS_RECIPIENT,
-        type_alerte,
-        product_name,
-        quantity:     quantity || '—',
-        unit:         unit     || '—',
-        status:       status   || '—',
-        auteur:       auteur   || '—',
-        details:      details  || ''
-      }
-    })
-  }).catch(e => console.warn('EmailJS error:', e));
+async function getRecipients() {
+  try {
+    const rows = await db.select('destinataires', 'order=email.asc');
+    return rows.map(r => r.email);
+  } catch(e) { return [EJS_RECIPIENT]; }
+}
+
+async function sendMail(type_alerte, product_name, quantity, unit, status, auteur, details) {
+  const recipients = await getRecipients();
+  for (const email of recipients) {
+    fetch('https://api.emailjs.com/api/v1.0/email/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        service_id:  EJS_SERVICE_ID,
+        template_id: EJS_TEMPLATE_ID,
+        user_id:     EJS_PUBLIC_KEY,
+        template_params: {
+          email,
+          type_alerte,
+          product_name,
+          quantity:     quantity || '—',
+          unit:         unit     || '—',
+          status:       status   || '—',
+          auteur:       auteur   || '—',
+          details:      details  || ''
+        }
+      })
+    }).catch(e => console.warn('EmailJS error:', e));
+  }
 }
 
 
@@ -714,22 +724,46 @@ async function clearHistorique() {
 /* ──────────────────────────────────────────────
    PAGE : CONFIGURATION EmailJS (admin uniquement)
    ────────────────────────────────────────────── */
-function renderConfig() {
+async function renderConfig() {
   if (!isAdmin()) return;
+  let recipients = [];
+  try { recipients = await db.select('destinataires', 'order=email.asc'); } catch(e) {}
+
+  let rows = recipients.map(r => `
+    <tr>
+      <td>${r.email}</td>
+      <td style="font-size:13px;color:#888">${r.nom || '—'}</td>
+      <td><button class="btn-sm btn-danger" onclick="deleteRecipient(${r.id})">Supprimer</button></td>
+    </tr>`).join('');
+
   document.getElementById('page-config').innerHTML = `
     <div class="card">
-      <div class="card-title">Configuration des alertes email</div>
+      <div class="card-title">Destinataires des alertes email</div>
       <div class="emailjs-note">
-        Les alertes email sont configurées et actives. Un mail est envoyé automatiquement à
-        <strong>${EJS_RECIPIENT}</strong> dans les cas suivants :<br><br>
+        Un mail est envoyé à tous les destinataires ci-dessous dans ces situations :<br><br>
         🟡 Produit en <strong>ALERTE</strong> &nbsp;|&nbsp;
         🔴 Produit en <strong>CRITIQUE</strong> &nbsp;|&nbsp;
         🗑️ <strong>Suppression</strong> d'un produit &nbsp;|&nbsp;
         👤 <strong>Création</strong> d'un compte
       </div>
-      <div style="display:flex;gap:8px;margin-top:4px">
-        <button class="btn-add" onclick="testMailConfig()">Envoyer un mail de test</button>
+
+      <div class="form-inline" style="margin-bottom:16px">
+        <div class="form-group"><label>Email</label><input type="email" id="new-dest-email" placeholder="prenom.nom@spie.com"></div>
+        <div class="form-group"><label>Nom (optionnel)</label><input type="text" id="new-dest-nom" placeholder="Jean Dupont"></div>
+        <div><button class="btn-add" onclick="addRecipient()">+ Ajouter</button></div>
       </div>
+      <div id="dest-msg-ok" class="msg-ok">Destinataire ajouté.</div>
+      <div id="dest-msg-err" class="msg-err">Email invalide ou déjà présent.</div>
+
+      <table>
+        <thead><tr><th>Email</th><th>Nom</th><th>Action</th></tr></thead>
+        <tbody>${rows || '<tr><td colspan="3" style="text-align:center;color:#888;padding:16px">Aucun destinataire configuré.</td></tr>'}</tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Test</div>
+      <button class="btn-add" onclick="testMailConfig()">Envoyer un mail de test à tous</button>
       <div id="cfg-msg" style="margin-top:10px;font-size:13px;display:none"></div>
     </div>`;
 }
@@ -746,11 +780,11 @@ function saveCfg() {
   setTimeout(() => m.style.display = 'none', 3000);
 }
 
-function testMailConfig() {
-  sendMail('🧪 Test', 'Produit Test', 5, 'pcs', 'alerte', currentUser ? currentUser.name : 'Admin', 'Ceci est un mail de test envoyé depuis la configuration.');
+async function testMailConfig() {
+  await sendMail('🧪 Test', 'Produit Test', 5, 'pcs', 'alerte', currentUser ? currentUser.name : 'Admin', 'Ceci est un mail de test envoyé depuis la configuration.');
   const m = document.getElementById('cfg-msg');
   m.style.display = 'block'; m.style.color = '#27500a';
-  m.textContent = 'Mail de test envoyé à ' + EJS_RECIPIENT;
+  m.textContent = 'Mail de test envoyé à tous les destinataires.';
   setTimeout(() => m.style.display = 'none', 4000);
 }
 
@@ -766,6 +800,33 @@ function sendAlertEmail(p, statutForce) {
     currentUser ? currentUser.name : '—',
     `Seuil alerte : ${p.seuil_alerte} ${p.unit} | Seuil critique : ${p.seuil_critique} ${p.unit}`
   );
+}
+
+/* ──────────────────────────────────────────────
+   DESTINATAIRES EMAIL
+   ────────────────────────────────────────────── */
+async function addRecipient() {
+  const email = document.getElementById('new-dest-email').value.trim().toLowerCase();
+  const nom   = document.getElementById('new-dest-nom').value.trim();
+  const ok    = document.getElementById('dest-msg-ok');
+  const err   = document.getElementById('dest-msg-err');
+  ok.style.display = 'none'; err.style.display = 'none';
+  if (!email || !email.includes('@')) { err.style.display = 'block'; return; }
+  try {
+    await db.insert('destinataires', { email, nom });
+    ok.style.display = 'block';
+    setTimeout(() => ok.style.display = 'none', 3000);
+    document.getElementById('new-dest-email').value = '';
+    document.getElementById('new-dest-nom').value   = '';
+    renderConfig();
+  } catch(e) { err.style.display = 'block'; }
+}
+
+async function deleteRecipient(id) {
+  confirmModal('Supprimer ce destinataire ?', 'Il ne recevra plus les alertes.', async () => {
+    try { await db.delete('destinataires', id); renderConfig(); }
+    catch(e) { infoModal('Erreur lors de la suppression.'); }
+  });
 }
 
 /* ──────────────────────────────────────────────
