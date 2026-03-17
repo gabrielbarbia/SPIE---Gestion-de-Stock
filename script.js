@@ -854,7 +854,7 @@ function sendAlertEmail(p, statutForce) {
     p.unit,
     s,
     currentUser ? currentUser.name : '—',
-    `Seuil alerte : ${p.seuil_alerte} ${p.unit} | Produit : ${p.name}`
+    `Produit : ${p.name}      |     Quantité  : ${p.qty}    |     Seuil alerte : ${p.seuil_alerte} ${p.unit} `
   );
 }
 
