@@ -846,7 +846,7 @@ async function testMailConfig() {
 
 function sendAlertEmail(p, statutForce) {
   const s = statutForce || getStatus(p);
-  const label = s === 'critique' ? '🔴 CRITIQUE' : '🟡 ALERTE';
+  const label = s === 'critique' ? '🔴 CRITIQUE 🔴' : '🟡 ALERTE 🟡';
   sendMail(
     label,
     p.name,
@@ -854,7 +854,7 @@ function sendAlertEmail(p, statutForce) {
     p.unit,
     s,
     currentUser ? currentUser.name : '—',
-    `Produit : ${p.name}      |     Quantité  : ${p.qty}    |     Seuil alerte : ${p.seuil_alerte} ${p.unit} `
+    `Produit : ${p.name}      |     Quantité  : ${p.qty}    |     Seuil critique : ${p.seuil_critique}`
   );
 }
 
