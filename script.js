@@ -140,7 +140,7 @@ const TAB_LABELS = {
   produits:   'Produits',
   historique: 'Historique',
   comptes:    'Comptes',
-  config:     'Configuration'
+  config:     'Mail'
 };
 
 /* Rôles en lecture seule — aucune modification permise */
