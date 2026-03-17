@@ -560,7 +560,81 @@ async function saveEditProd(id) {
     renderProduits();
   } catch(e) { infoModal('Erreur lors de la modification.'); }
 }
+/* ──────────────────────────────────────────────
+   PAGE : HISTORIQUE
+   ────────────────────────────────────────────── */
+async function renderHistorique() {
+  showLoader('Chargement de l\'historique...');
+  let hist = [];
+  try { hist = await db.select('historique', 'order=created_at.desc&limit=500'); } catch(e) {}
 
+  function actionBadge(action) {
+    const a = action.toLowerCase();
+    if (a.includes('supprim'))  return '<span class="badge badge-critique">Suppression</span>';
+    if (a.includes('créé') || a.includes('cree')) return '<span class="badge badge-ok">Création</span>';
+    if (a.includes('quantité')) return '<span class="badge badge-alerte">Quantité</span>';
+    if (a.includes('modifié') || a.includes('modifie')) return '<span class="badge" style="background:#e6f1fb;color:#185fa5">Modification</span>';
+    return '<span class="badge" style="background:#f1efe8;color:#5f5e5a">Autre</span>';
+  }
+
+  let html = `
+    <div class="card">
+      <div class="table-top">
+        <div class="card-title" style="margin:0">Historique des actions (${hist.length})</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input class="search-bar" type="text" placeholder="Rechercher..." oninput="filterHistorique(this.value)" style="width:200px">
+          ${isAdmin() ? `<button class="btn-sm btn-danger" onclick="clearHistorique()">Vider l'historique</button>` : ''}
+        </div>
+      </div>`;
+
+  if (!hist.length) {
+    html += `<div style="text-align:center;padding:32px;color:#888;font-size:14px">Aucune action enregistrée.</div>`;
+  } else {
+    html += `<table id="histTable"><thead><tr>
+      <th style="width:90px">Date</th>
+      <th style="width:80px">Heure</th>
+      <th>Produit</th>
+      <th style="width:140px">Auteur</th>
+      <th style="width:110px">Type</th>
+      <th>Modification</th>
+    </tr></thead><tbody>`;
+    hist.forEach(h => {
+      html += `<tr data-search="${(h.produit + ' ' + h.auteur + ' ' + h.action).toLowerCase()}">
+        <td style="font-size:13px;white-space:nowrap">${h.date}</td>
+        <td style="font-size:13px;white-space:nowrap;color:#888">${h.heure}</td>
+        <td><strong>${h.produit}</strong></td>
+        <td style="font-size:13px">${h.auteur}</td>
+        <td>${actionBadge(h.action)}</td>
+        <td style="font-size:13px;color:#444">${h.action}</td>
+      </tr>`;
+    });
+    html += `</tbody></table>`;
+  }
+  html += `</div>`;
+  document.getElementById('page-historique').innerHTML = html;
+}
+
+function filterHistorique(val) {
+  document.querySelectorAll('#histTable tbody tr').forEach(r => {
+    r.style.display = r.dataset.search.includes(val.toLowerCase()) ? '' : 'none';
+  });
+}
+
+async function clearHistorique() {
+  confirmModal('Vider tout l\'historique ?', 'Cette action est irréversible.', async () => {
+    try {
+      await sbFetch('historique', { method: 'DELETE', prefer: 'return=minimal', headers: { 'id': 'gte.0' } });
+      renderHistorique();
+    } catch(e) {
+      /* fallback : supprimer ligne par ligne */
+      try {
+        const all = await db.select('historique', 'select=id');
+        for (const row of all) await db.delete('historique', row.id);
+        renderHistorique();
+      } catch(e2) { infoModal('Erreur lors de la suppression de l\'historique.'); }
+    }
+  });
+}
 /* ──────────────────────────────────────────────
    PAGE : COMPTES (admin uniquement)
    ────────────────────────────────────────────── */
@@ -716,81 +790,7 @@ async function saveEditAccount(id, username) {
   } catch(e) { infoModal('Erreur lors de la modification.'); }
 }
 
-/* ──────────────────────────────────────────────
-   PAGE : HISTORIQUE
-   ────────────────────────────────────────────── */
-async function renderHistorique() {
-  showLoader('Chargement de l\'historique...');
-  let hist = [];
-  try { hist = await db.select('historique', 'order=created_at.desc&limit=500'); } catch(e) {}
 
-  function actionBadge(action) {
-    const a = action.toLowerCase();
-    if (a.includes('supprim'))  return '<span class="badge badge-critique">Suppression</span>';
-    if (a.includes('créé') || a.includes('cree')) return '<span class="badge badge-ok">Création</span>';
-    if (a.includes('quantité')) return '<span class="badge badge-alerte">Quantité</span>';
-    if (a.includes('modifié') || a.includes('modifie')) return '<span class="badge" style="background:#e6f1fb;color:#185fa5">Modification</span>';
-    return '<span class="badge" style="background:#f1efe8;color:#5f5e5a">Autre</span>';
-  }
-
-  let html = `
-    <div class="card">
-      <div class="table-top">
-        <div class="card-title" style="margin:0">Historique des actions (${hist.length})</div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <input class="search-bar" type="text" placeholder="Rechercher..." oninput="filterHistorique(this.value)" style="width:200px">
-          ${isAdmin() ? `<button class="btn-sm btn-danger" onclick="clearHistorique()">Vider l'historique</button>` : ''}
-        </div>
-      </div>`;
-
-  if (!hist.length) {
-    html += `<div style="text-align:center;padding:32px;color:#888;font-size:14px">Aucune action enregistrée.</div>`;
-  } else {
-    html += `<table id="histTable"><thead><tr>
-      <th style="width:90px">Date</th>
-      <th style="width:80px">Heure</th>
-      <th>Produit</th>
-      <th style="width:140px">Auteur</th>
-      <th style="width:110px">Type</th>
-      <th>Modification</th>
-    </tr></thead><tbody>`;
-    hist.forEach(h => {
-      html += `<tr data-search="${(h.produit + ' ' + h.auteur + ' ' + h.action).toLowerCase()}">
-        <td style="font-size:13px;white-space:nowrap">${h.date}</td>
-        <td style="font-size:13px;white-space:nowrap;color:#888">${h.heure}</td>
-        <td><strong>${h.produit}</strong></td>
-        <td style="font-size:13px">${h.auteur}</td>
-        <td>${actionBadge(h.action)}</td>
-        <td style="font-size:13px;color:#444">${h.action}</td>
-      </tr>`;
-    });
-    html += `</tbody></table>`;
-  }
-  html += `</div>`;
-  document.getElementById('page-historique').innerHTML = html;
-}
-
-function filterHistorique(val) {
-  document.querySelectorAll('#histTable tbody tr').forEach(r => {
-    r.style.display = r.dataset.search.includes(val.toLowerCase()) ? '' : 'none';
-  });
-}
-
-async function clearHistorique() {
-  confirmModal('Vider tout l\'historique ?', 'Cette action est irréversible.', async () => {
-    try {
-      await sbFetch('historique', { method: 'DELETE', prefer: 'return=minimal', headers: { 'id': 'gte.0' } });
-      renderHistorique();
-    } catch(e) {
-      /* fallback : supprimer ligne par ligne */
-      try {
-        const all = await db.select('historique', 'select=id');
-        for (const row of all) await db.delete('historique', row.id);
-        renderHistorique();
-      } catch(e2) { infoModal('Erreur lors de la suppression de l\'historique.'); }
-    }
-  });
-}
 
 /* ──────────────────────────────────────────────
    PAGE : CONFIGURATION EmailJS (admin uniquement)
